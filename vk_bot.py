@@ -10,3 +10,4 @@ for event in longpoll.listen():
         # vk.messages.send(user_id=event.obj.message['from_id'],
                         # message=event.obj.message['text'],
                         # random_id=random.randint(0, 2 ** 64))
+print('lo123456789')
