@@ -8,6 +8,5 @@ for event in longpoll.listen():
         print(event.obj.message['text'])
         # vk = vk_session.get_api()
         # vk.messages.send(user_id=event.obj.message['from_id'],
-                        # message=event.obj.message['text'],
-                        # random_id=random.randint(0, 2 ** 64))
-print('lo123456789')
+        # message=event.obj.message['text'],
+        # random_id=random.randint(0, 2 ** 64))
