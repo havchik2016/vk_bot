@@ -28,9 +28,7 @@ def covid_stat():
 
 def weather():
     try:
-        city_id = vk_response[0]['city']['id']
-        city_response = vk_user.database.getCitiesById(city_ids=[city_id])
-        city_name = city_response[0]['title']
+        city_name = " ".join(msg_text_parts[1:])
         params = {
             'q': city_name,
             'units': 'metric',
@@ -45,37 +43,32 @@ def weather():
                          random_id=random.randint(0, 2 ** 64))
     except KeyError:
         vk.messages.send(user_id=user_id,
-                         message="У вас нет города в профиле :(",
+                         message="Город не найден :(",
                          random_id=random.randint(0, 2 ** 64))
 
 
 if __name__ == "__main__":
     vk_session = vk_api.VkApi(
         token='token')
-    vk_user_session = vk_api.VkApi("login", "password")
-    try:
-        vk_user_session.auth(token_only=True)
-    except vk_api.AuthError as error_msg:
-        print(error_msg)
     longpoll = VkBotLongPoll(vk_session, GROUP_ID)
     print('Бот активировался')
     vk = vk_session.get_api()
-    vk_user = vk_user_session.get_api()
     upload = vk_api.VkUpload(vk_session)
     for event in longpoll.listen():
         if event.type == VkBotEventType.MESSAGE_NEW:
-            msg_text = event.obj.message['text']
+            clear_text = event.obj.message['text']
+            msg_text_parts = clear_text.strip().split()
+            command = msg_text_parts[0]
             user_id = event.obj.message['from_id']
             timestamp = event.obj.message['date']
             value = datetime.fromtimestamp(timestamp)
-            vk_response = vk.users.get(user_ids=[user_id], fields="city, country")
-            if msg_text == "/weather":
+            if command == "/weather":
                 weather()
-            elif msg_text == '/covid':
+            elif command == '/covid':
                 covid_stat()
-            elif msg_text == '/help':
+            elif command in ['/help', 'Начать']:
                 vk.messages.send(user_id=user_id,
-                                 message="/weather - погода по городу в профиле;\n/covid - без комментариев.",
+                                 message="/weather <city_name> - погода по городу city_name;\n/covid - без комментариев.",
                                  random_id=random.randint(0, 2 ** 64))
             else:
                 vk.messages.send(user_id=user_id,
