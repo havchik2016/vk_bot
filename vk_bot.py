@@ -6,16 +6,6 @@ import bs4
 from PIL import ImageDraw, Image, ImageFont
 from vk_api.bot_longpoll import VkBotLongPoll, VkBotEventType
 
-# vk_session = vk_api.VkApi(token=TOKEN)
-# longpoll = botlp.VkBotLongPoll(vk_session, GROUP_ID)
-# for event in longpoll.listen():
-#     if event.type == botlp.VkBotEventType.MESSAGE_NEW:
-#         print(event.obj.message['text'])
-#         # vk = vk_session.get_api()
-#         # vk.messages.send(user_id=event.obj.message['from_id'],
-#         # message=event.obj.message['text'],
-#         # random_id=random.randint(0, 2 ** 64))
-
 
 def covid_stat():
     rus_req = requests.get('https://www.worldometers.info/coronavirus/country/russia/')
@@ -27,6 +17,7 @@ def covid_stat():
     for cords, text in [[(237, 200), rus_stats[0]], [(390, 360), rus_stats[1]], [(482, 520), rus_stats[2]]]:
         draw.text(cords, text, font=nt, fill=(0, 0, 0))
     img.show()
+
 
 def weather():
     vk_session = vk_api.VkApi(token=TOKEN)
@@ -61,7 +52,6 @@ def weather():
                 vk.messages.send(user_id=user_id,
                                  message="У вас нет города :(",
                                  random_id=random.randint(0, 2 ** 64))
-
 
 
 if __name__ == "__main__":
