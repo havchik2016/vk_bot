@@ -33,7 +33,7 @@ def weather():
         params = {
             'q': city_name,
             'units': 'metric',
-            'appid': '5ffd78188a2352cc9d6281eb6b29f0ff'
+            'appid': 'appkey'
         }
         response = requests.get("https://api.openweathermap.org/data/2.5/weather", params=params)
         json_response = response.json()
@@ -92,8 +92,8 @@ def playlist():
 
 if __name__ == "__main__":
     vk_session = vk_api.VkApi(
-        token='1a5fcaf38c53b866a6c3d8caf7ef788f91365a47d13dc5081b5f9481629c87403ae6138cab5a613fd86fc')
-    user_session = vk_api.VkApi(login='+79244364735', password='MathTop666')
+        token='token')
+    user_session = vk_api.VkApi(login='login', password='password')
     user_session.auth()
     longpoll = VkBotLongPoll(vk_session, 195364115)
     print('Бот активировался')
