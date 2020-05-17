@@ -33,15 +33,15 @@ def weather():
         params = {
             'q': city_name,
             'units': 'metric',
-            'appid': 'appkey'
+            'appid': '5ffd78188a2352cc9d6281eb6b29f0ff'
         }
         response = requests.get("https://api.openweathermap.org/data/2.5/weather", params=params)
         json_response = response.json()
-        print(json_response)
         temperature = json_response['main']['temp']
         feels_like = json_response['main']['feels_like']
-        sunrise, sunset = datetime.fromtimestamp(json_response['sys']['sunrise']), datetime.fromtimestamp(
-            json_response['sys']['sunset'])
+        sunrise, sunset = datetime.fromtimestamp(
+            json_response['sys']['sunrise'] - 36000 + json_response['timezone']), datetime.fromtimestamp(
+            json_response['sys']['sunset'] - 36000 + json_response['timezone'])
         # sunrise.replace(hour=sunrise.hour - (10 - json_response['timezone'] // (60 ** 2)))
         # sunset.replace(hour=sunset.hour - (10 - json_response['timezone'] // (60 ** 2)))
         wind = json_response['wind']['speed']
@@ -92,8 +92,8 @@ def playlist():
 
 if __name__ == "__main__":
     vk_session = vk_api.VkApi(
-        token='TOKEN')
-    user_session = vk_api.VkApi(login='LOGIN', password='PASSWORD')
+        token='1a5fcaf38c53b866a6c3d8caf7ef788f91365a47d13dc5081b5f9481629c87403ae6138cab5a613fd86fc')
+    user_session = vk_api.VkApi(login='+79244364735', password='MathTop666')
     user_session.auth()
     longpoll = VkBotLongPoll(vk_session, 195364115)
     print('Бот активировался')
@@ -113,7 +113,7 @@ if __name__ == "__main__":
                 covid_stat()
             elif command in ['/help', 'Начать']:
                 vk.messages.send(user_id=user_id,
-                                 message="/weather <city_name> - погода по городу city_name;\n/covid - без комментариев.",
+                                 message="/weather <city_name> - погода по городу city_name;\n/covid - без комментариев.\n/playlist - рандомные 5 песен из Вашего плейлиста ВК\n/help - это сообщение",
                                  random_id=random.randint(0, 2 ** 64))
             elif command == '/playlist':
                 playlist()
