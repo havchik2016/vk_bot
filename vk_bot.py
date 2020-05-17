@@ -2,6 +2,7 @@ import requests
 import random
 from datetime import datetime
 import vk_api
+from vk_api import audio, keyboard
 import bs4
 from PIL import ImageDraw, Image, ImageFont
 from vk_api.bot_longpoll import VkBotLongPoll, VkBotEventType
@@ -32,14 +33,44 @@ def weather():
         params = {
             'q': city_name,
             'units': 'metric',
-            'appid': 'yourkey'
+            'appid': 'appkey'
         }
         response = requests.get("https://api.openweathermap.org/data/2.5/weather", params=params)
         json_response = response.json()
+        print(json_response)
         temperature = json_response['main']['temp']
         feels_like = json_response['main']['feels_like']
+        sunrise, sunset = datetime.fromtimestamp(json_response['sys']['sunrise']), datetime.fromtimestamp(
+            json_response['sys']['sunset'])
+        # sunrise.replace(hour=sunrise.hour - (10 - json_response['timezone'] // (60 ** 2)))
+        # sunset.replace(hour=sunset.hour - (10 - json_response['timezone'] // (60 ** 2)))
+        wind = json_response['wind']['speed']
+        ico = json_response['weather'][0]['icon']
+        icon = open('icon.png', 'wb')
+        icon.write(requests.get(f"http://openweathermap.org/img/wn/{ico}@2x.png").content)
+        icon.close()
+        ico = Image.open('icon.png')
+        resized_ico = ico.resize((400, 400), Image.ANTIALIAS)
+        fn_main = ImageFont.truetype('14155.ttf', 136)
+        fn_sunrise = ImageFont.truetype('14155.ttf', 113)
+        fn_date = ImageFont.truetype('14155.ttf', 82)
+        color = (0, 0, 0)
+        img = Image.open('weather.png')
+        draw = ImageDraw.Draw(img)
+        draw.text((129, 906), f'Температура воздуха: {int(temperature)}°', font=fn_main, fill=color)
+        draw.text((129, 1077), f'RealFeel®: {int(feels_like)}°', font=fn_main, fill=color)
+        draw.text((129, 1244), f'Скорость ветра: {wind} м/с', font=fn_main, fill=color)
+        draw.text((129, 1440), f"Рассвет: {':'.join(str(sunrise.time()).split(':')[:-1])}", font=fn_sunrise, fill=color)
+        draw.text((1253, 1440), f"Закат: {':'.join(str(sunset.time()).split(':')[:-1])}", font=fn_sunrise, fill=color)
+        draw.text((1700, 604), value.date().strftime('%d.%m'), font=fn_date, fill=color)
+        draw.text((438, 752), json_response['weather'][0]['description'], font=fn_date, fill=color)
+        img.paste(resized_ico, (80, 530), resized_ico)
+        img.save("weather_stat.png")
+        photo = upload.photo_messages(['weather_stat.png'])
+        vk_photo_id = f"photo{photo[0]['owner_id']}_{photo[0]['id']}_{photo[0]['access_key']}"
         vk.messages.send(user_id=user_id,
-                         message=f"Температура на {value}: {int(temperature)}℃, ощущается как {int(feels_like)}℃.",
+                         message='Держи, хорошего дня:)',
+                         attachment=vk_photo_id,
                          random_id=random.randint(0, 2 ** 64))
     except KeyError:
         vk.messages.send(user_id=user_id,
@@ -47,10 +78,24 @@ def weather():
                          random_id=random.randint(0, 2 ** 64))
 
 
+def playlist():
+    audio = vk_api.audio.VkAudio(user_session, convert_m3u8_links=True)
+    spisok = list(audio.get(owner_id=user_id))
+    random.shuffle(spisok)
+    songs = spisok[:5]
+    songs_ids = ','.join([f"audio{song['owner_id']}_{song['id']}" for song in songs])
+    vk.messages.send(user_id=user_id,
+                     random_id=random.randint(0, 2 ** 64),
+                     message='Держи небольшой плейлист',
+                     attachment=songs_ids)
+
+
 if __name__ == "__main__":
     vk_session = vk_api.VkApi(
-        token='token')
-    longpoll = VkBotLongPoll(vk_session, GROUP_ID)
+        token='TOKEN')
+    user_session = vk_api.VkApi(login='LOGIN', password='PASSWORD')
+    user_session.auth()
+    longpoll = VkBotLongPoll(vk_session, 195364115)
     print('Бот активировался')
     vk = vk_session.get_api()
     upload = vk_api.VkUpload(vk_session)
@@ -70,6 +115,8 @@ if __name__ == "__main__":
                 vk.messages.send(user_id=user_id,
                                  message="/weather <city_name> - погода по городу city_name;\n/covid - без комментариев.",
                                  random_id=random.randint(0, 2 ** 64))
+            elif command == '/playlist':
+                playlist()
             else:
                 vk.messages.send(user_id=user_id,
                                  message="Я не знаю, что вам сказать:\nвведите /help для получения списка команд.",
