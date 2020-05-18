@@ -33,7 +33,7 @@ def weather():
         params = {
             'q': city_name,
             'units': 'metric',
-            'appid': 'appkey'
+            'appid': 'apikey'
         }
         response = requests.get("https://api.openweathermap.org/data/2.5/weather", params=params)
         json_response = response.json()
@@ -79,15 +79,20 @@ def weather():
 
 
 def playlist():
-    audio = vk_api.audio.VkAudio(user_session, convert_m3u8_links=True)
-    spisok = list(audio.get(owner_id=user_id))
-    random.shuffle(spisok)
-    songs = spisok[:5]
-    songs_ids = ','.join([f"audio{song['owner_id']}_{song['id']}" for song in songs])
-    vk.messages.send(user_id=user_id,
-                     random_id=random.randint(0, 2 ** 64),
-                     message='Держи небольшой плейлист',
-                     attachment=songs_ids)
+    try:
+        audio = vk_api.audio.VkAudio(user_session, convert_m3u8_links=True)
+        spisok = list(audio.get(owner_id=user_id))
+        random.shuffle(spisok)
+        songs = spisok[:5]
+        songs_ids = ','.join([f"audio{song['owner_id']}_{song['id']}" for song in songs])
+        vk.messages.send(user_id=user_id,
+                         random_id=random.randint(0, 2 ** 64),
+                         message='Держи небольшой плейлист',
+                         attachment=songs_ids)
+    except vk_api.exceptions.AccessDenied:
+        vk.messages.send(user_id=user_id,
+                         random_id=random.randint(0, 2 ** 64),
+                         message='У вас закрыт плейлист :(')
 
 
 if __name__ == "__main__":
@@ -113,7 +118,7 @@ if __name__ == "__main__":
                 covid_stat()
             elif command in ['/help', 'Начать']:
                 vk.messages.send(user_id=user_id,
-                                 message="/weather <city_name> - погода по городу city_name;\n/covid - без комментариев.\n/playlist - рандомные 5 песен из Вашего плейлиста ВК\n/help - это сообщение",
+                                 message="/weather <city_name> - погода по городу city_name;\n/covid - без комментариев;\n/playlist - рандомные 5 песен из Вашего плейлиста ВК, если он открыт (или меньше, если у вас их меньше);\n/help - это сообщение.",
                                  random_id=random.randint(0, 2 ** 64))
             elif command == '/playlist':
                 playlist()
