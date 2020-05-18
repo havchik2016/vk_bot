@@ -99,6 +99,27 @@ def playlist():
                          message='У вас закрыт плейлист :(')
 
 
+def day_of_week():
+    weekdays = ['понедельник', 'вторник', 'среда', 'четверг', 'пятница', 'суббота', 'воскресенье']
+    try:
+        time = datetime.strptime(msg_text_parts[1], "%Y-%m-%d")
+        weekday = time.strftime("%w")
+        vk.messages.send(user_id=user_id,
+                         random_id=random.randint(0, 2 ** 64),
+                         message=f'Это {weekdays[(int(weekday) - 1) % 7]}. Хорошего дня!')
+    except IndexError:
+        time = datetime.now()
+        weekday = time.strftime("%w")
+        vk.messages.send(user_id=user_id,
+                         random_id=random.randint(0, 2 ** 64),
+                         message=f'Сегодня {weekdays[(int(weekday) - 1) % 7]}. Хорошего дня!')
+    except ValueError:
+        vk.messages.send(user_id=user_id,
+                         random_id=random.randint(0, 2 ** 64),
+                         message='Неправильный формат ввода :(')
+
+
+
 if __name__ == "__main__":
     vk_session = vk_api.VkApi(
         token='token')
@@ -122,10 +143,12 @@ if __name__ == "__main__":
                 covid_stat()
             elif command in ['/help', 'Начать']:
                 vk.messages.send(user_id=user_id,
-                                 message="/weather <city_name> - погода по городу city_name;\n/covid - без комментариев;\n/playlist number_of_songs=5 - рандомные number_of_songs (по умолчанию 5) песен из Вашего плейлиста ВК, если он открыт (или меньше, если у вас их меньше);\n/help - это сообщение.",
+                                 message="/weather <city_name> - погода по городу city_name;\n/covid - без комментариев;\n/playlist <number_of_songs=5> - рандомные number_of_songs (по умолчанию 5) песен из Вашего плейлиста ВК, если он открыт (или меньше, если у вас их меньше);\n/day_of_week <day> - какой day в формате YYYY-MM-DD день недели, по умолчанию сегодня;\n/help - это сообщение.",
                                  random_id=random.randint(0, 2 ** 64))
             elif command == '/playlist':
                 playlist()
+            elif command == '/day_of_week':
+                day_of_week()
             else:
                 vk.messages.send(user_id=user_id,
                                  message="Я не знаю, что вам сказать:\nвведите /help для получения списка команд.",
