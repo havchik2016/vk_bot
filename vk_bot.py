@@ -167,10 +167,11 @@ def place_search():
     try:
         geocode = " ".join(msg_text_parts[1:])
         map_file = 'map.png'
-        geocoder_request = f'http://geocode-maps.yandex.ru/1.x/?apikey=40d1649f-0493-4b70-98ba-98533de7710b&geocode={geocode}&format=json'
+        geocoder_request = f'http://geocode-maps.yandex.ru/1.x/?apikey=yourkey&geocode={geocode}&format=json'
         geo_response = requests.get(geocoder_request)
         json_geo_response = geo_response.json()
-        toponym = json_geo_response["response"]["GeoObjectCollection"]["featureMember"][0]["GeoObject"]["boundedBy"]["Envelope"]
+        toponym = json_geo_response["response"]["GeoObjectCollection"]["featureMember"][0]["GeoObject"]["boundedBy"][
+            "Envelope"]
         toponym_corners = toponym["lowerCorner"].split(), toponym['upperCorner'].split()
         static_request = f"http://static-maps.yandex.ru/1.x/?bbox={','.join(toponym_corners[0])}~{','.join(toponym_corners[1])}&l=map"
         static_response = requests.get(static_request)
@@ -187,7 +188,6 @@ def place_search():
         vk.messages.send(user_id=user_id,
                          random_id=random.randint(0, 2 ** 64),
                          message='Неправильный формат ввода :(')
-
 
 
 if __name__ == "__main__":
@@ -214,7 +214,7 @@ if __name__ == "__main__":
                 covid_stat()
             elif command in ['/help', 'Начать']:
                 vk.messages.send(user_id=user_id,
-                                 message="/weather <city_name> - погода по городу city_name;\n/covid - без комментариев;\n/playlist <number_of_songs=5> - рандомные number_of_songs (по умолчанию 5) песен из Вашего плейлиста ВК, если он открыт (или меньше, если у вас их меньше);\n/day_of_week <day> - какой day в формате YYYY-MM-DD день недели, по умолчанию сегодня;\n/place_search <place> - показ места place на карте;\n/help - это сообщение.",
+                                 message="/weather <city_name> - погода по городу city_name;\n/covid - без комментариев;\n/playlist <number_of_songs=5> - рандомные number_of_songs (по умолчанию 5) песен из Вашего плейлиста ВК, если он открыт (или меньше, если у вас их меньше);\n/day_of_week <day> - какой day в формате YYYY-MM-DD день недели, по умолчанию сегодня;\n/place_search <place> - показ места place на карте;\n/wiki <term> - поиск стаьи по term в Википедии, при term = random - случайная статья;\n/help - это сообщение.",
                                  random_id=random.randint(0, 2 ** 64))
             elif command == '/playlist':
                 playlist()
