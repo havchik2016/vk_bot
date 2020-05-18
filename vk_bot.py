@@ -6,6 +6,7 @@ from vk_api import audio, keyboard
 import bs4
 from PIL import ImageDraw, Image, ImageFont
 from vk_api.bot_longpoll import VkBotLongPoll, VkBotEventType
+import wikipedia
 
 
 def covid_stat():
@@ -33,7 +34,7 @@ def weather():
         params = {
             'q': city_name,
             'units': 'metric',
-            'appid': '5ffd78188a2352cc9d6281eb6b29f0ff'
+            'appid': 'apikey'
         }
         response = requests.get("https://api.openweathermap.org/data/2.5/weather", params=params)
         json_response = response.json()
@@ -76,6 +77,49 @@ def weather():
         vk.messages.send(user_id=user_id,
                          message="Город не найден :(",
                          random_id=random.randint(0, 2 ** 64))
+
+
+def wiki():
+    req_name = " ".join(msg_text_parts[1:])
+    if req_name.lower() in ['рандом', 'random']:
+        try:
+            search_res = wikipedia.random()
+            wiki_pg = wikipedia.page(title=search_res)
+            wiki_summary = (wiki_pg.summary[:4093] + '...' if len(wiki_pg.summary) > 4096 else wiki_pg.summary)
+            vk.messages.send(user_id=user_id,
+                             message=wiki_summary,
+                             random_id=random.randint(0, 2 ** 64))
+        except IndexError:
+            vk.messages.send(user_id=user_id,
+                             message="Запрос не найден :(",
+                             random_id=random.randint(0, 2 ** 64))
+        except wikipedia.exceptions.DisambiguationError:
+            vk.messages.send(user_id=user_id,
+                             message="Возникла ошибка, попробуйте еще раз :(",
+                             random_id=random.randint(0, 2 ** 64))
+    else:
+        try:
+            search_res = wikipedia.search(req_name, results=1)[0]
+            wiki_pg = wikipedia.page(title=search_res)
+            urls = wiki_pg.images
+            random.shuffle(urls)
+            with open('wiki.jpg', 'wb') as wiki_img:
+                wiki_img.write(requests.get(list(filter(lambda x: not x.endswith('.svg'), urls))[0]).content)
+            wiki_summary = wiki_pg.summary[:4093] + '...'
+            photo = upload.photo_messages(['wiki.jpg'])
+            vk_photo_id = f"photo{photo[0]['owner_id']}_{photo[0]['id']}_{photo[0]['access_key']}"
+            vk.messages.send(user_id=user_id,
+                             message=wiki_summary,
+                             attachment=vk_photo_id,
+                             random_id=random.randint(0, 2 ** 64))
+        except IndexError:
+            vk.messages.send(user_id=user_id,
+                             message="Запрос не найден :(",
+                             random_id=random.randint(0, 2 ** 64))
+        except wikipedia.exceptions.DisambiguationError:
+            vk.messages.send(user_id=user_id,
+                             message="Возникла ошибка, попробуйте еще раз :(",
+                             random_id=random.randint(0, 2 ** 64))
 
 
 def playlist():
@@ -148,13 +192,14 @@ def place_search():
 
 if __name__ == "__main__":
     vk_session = vk_api.VkApi(
-        token='1a5fcaf38c53b866a6c3d8caf7ef788f91365a47d13dc5081b5f9481629c87403ae6138cab5a613fd86fc')
-    user_session = vk_api.VkApi(login='+79244364735', password='MathTop666')
+        token='token')
+    user_session = vk_api.VkApi(login='login', password='password')
     user_session.auth()
     longpoll = VkBotLongPoll(vk_session, 195364115)
     print('Бот активировался')
     vk = vk_session.get_api()
     upload = vk_api.VkUpload(vk_session)
+    wikipedia.set_lang('ru')
     for event in longpoll.listen():
         if event.type == VkBotEventType.MESSAGE_NEW:
             clear_text = event.obj.message['text']
@@ -173,6 +218,8 @@ if __name__ == "__main__":
                                  random_id=random.randint(0, 2 ** 64))
             elif command == '/playlist':
                 playlist()
+            elif command == '/wiki':
+                wiki()
             elif command == '/day_of_week':
                 day_of_week()
             elif command == '/place_search':
