@@ -33,7 +33,7 @@ def weather():
         params = {
             'q': city_name,
             'units': 'metric',
-            'appid': 'apikey'
+            'appid': '5ffd78188a2352cc9d6281eb6b29f0ff'
         }
         response = requests.get("https://api.openweathermap.org/data/2.5/weather", params=params)
         json_response = response.json()
@@ -119,11 +119,37 @@ def day_of_week():
                          message='Неправильный формат ввода :(')
 
 
+def place_search():
+    try:
+        geocode = " ".join(msg_text_parts[1:])
+        map_file = 'map.png'
+        geocoder_request = f'http://geocode-maps.yandex.ru/1.x/?apikey=40d1649f-0493-4b70-98ba-98533de7710b&geocode={geocode}&format=json'
+        geo_response = requests.get(geocoder_request)
+        json_geo_response = geo_response.json()
+        toponym = json_geo_response["response"]["GeoObjectCollection"]["featureMember"][0]["GeoObject"]["boundedBy"]["Envelope"]
+        toponym_corners = toponym["lowerCorner"].split(), toponym['upperCorner'].split()
+        static_request = f"http://static-maps.yandex.ru/1.x/?bbox={','.join(toponym_corners[0])}~{','.join(toponym_corners[1])}&l=map"
+        static_response = requests.get(static_request)
+        with open(map_file, 'wb') as Map:
+            Map.write(static_response.content)
+        photo = upload.photo_messages(['map.png'])
+        vk_photo_id = f"photo{photo[0]['owner_id']}_{photo[0]['id']}_{photo[0]['access_key']}"
+        vk.messages.send(user_id=user_id,
+                         message='Держи, хорошего дня:)',
+                         attachment=vk_photo_id,
+                         random_id=random.randint(0, 2 ** 64))
+
+    except IndexError:
+        vk.messages.send(user_id=user_id,
+                         random_id=random.randint(0, 2 ** 64),
+                         message='Неправильный формат ввода :(')
+
+
 
 if __name__ == "__main__":
     vk_session = vk_api.VkApi(
-        token='token')
-    user_session = vk_api.VkApi(login='login', password='password')
+        token='1a5fcaf38c53b866a6c3d8caf7ef788f91365a47d13dc5081b5f9481629c87403ae6138cab5a613fd86fc')
+    user_session = vk_api.VkApi(login='+79244364735', password='MathTop666')
     user_session.auth()
     longpoll = VkBotLongPoll(vk_session, 195364115)
     print('Бот активировался')
@@ -143,12 +169,14 @@ if __name__ == "__main__":
                 covid_stat()
             elif command in ['/help', 'Начать']:
                 vk.messages.send(user_id=user_id,
-                                 message="/weather <city_name> - погода по городу city_name;\n/covid - без комментариев;\n/playlist <number_of_songs=5> - рандомные number_of_songs (по умолчанию 5) песен из Вашего плейлиста ВК, если он открыт (или меньше, если у вас их меньше);\n/day_of_week <day> - какой day в формате YYYY-MM-DD день недели, по умолчанию сегодня;\n/help - это сообщение.",
+                                 message="/weather <city_name> - погода по городу city_name;\n/covid - без комментариев;\n/playlist <number_of_songs=5> - рандомные number_of_songs (по умолчанию 5) песен из Вашего плейлиста ВК, если он открыт (или меньше, если у вас их меньше);\n/day_of_week <day> - какой day в формате YYYY-MM-DD день недели, по умолчанию сегодня;\n/place_search <place> - показ места place на карте;\n/help - это сообщение.",
                                  random_id=random.randint(0, 2 ** 64))
             elif command == '/playlist':
                 playlist()
             elif command == '/day_of_week':
                 day_of_week()
+            elif command == '/place_search':
+                place_search()
             else:
                 vk.messages.send(user_id=user_id,
                                  message="Я не знаю, что вам сказать:\nвведите /help для получения списка команд.",
