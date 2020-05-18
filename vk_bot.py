@@ -80,10 +80,14 @@ def weather():
 
 def playlist():
     try:
+        try:
+            number_of_songs = int(msg_text_parts[1])
+        except IndexError:
+            number_of_songs = 5
         audio = vk_api.audio.VkAudio(user_session, convert_m3u8_links=True)
         spisok = list(audio.get(owner_id=user_id))
         random.shuffle(spisok)
-        songs = spisok[:5]
+        songs = spisok[:number_of_songs]
         songs_ids = ','.join([f"audio{song['owner_id']}_{song['id']}" for song in songs])
         vk.messages.send(user_id=user_id,
                          random_id=random.randint(0, 2 ** 64),
@@ -118,7 +122,7 @@ if __name__ == "__main__":
                 covid_stat()
             elif command in ['/help', 'Начать']:
                 vk.messages.send(user_id=user_id,
-                                 message="/weather <city_name> - погода по городу city_name;\n/covid - без комментариев;\n/playlist - рандомные 5 песен из Вашего плейлиста ВК, если он открыт (или меньше, если у вас их меньше);\n/help - это сообщение.",
+                                 message="/weather <city_name> - погода по городу city_name;\n/covid - без комментариев;\n/playlist number_of_songs=5 - рандомные number_of_songs (по умолчанию 5) песен из Вашего плейлиста ВК, если он открыт (или меньше, если у вас их меньше);\n/help - это сообщение.",
                                  random_id=random.randint(0, 2 ** 64))
             elif command == '/playlist':
                 playlist()
